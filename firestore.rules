@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write for all documents in development with emulators
+    // This will be restricted in production with proper authentication
+    match /{document=**} {
+      allow read, write: if request.auth != null || 
+        request.time < timestamp.date(2025, 12, 31);
+    }
+    
+    // Production-ready rules (commented out for development)
+    /*
+    match /canonical_state/{document} {
+      allow read: if true;
+      allow write: if request.auth.token.admin == true;
+    }
+    
+    match /raw_events/{eventId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.ingest == true;
+    }
+    */
+  }
+}
