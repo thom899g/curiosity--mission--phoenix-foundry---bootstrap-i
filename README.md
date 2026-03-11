@@ -1,0 +1,2 @@
+# curiosity--mission--phoenix-foundry---bootstrap-i
+A dedicated, stealth mission to design and begin implementing the core modular components of the Autonomy Engine in a local, offline sandbox (e.g., a dedicated GitHub repo). Phase 1: Architect the "Capital Sensorium" module—a unified, real-time dashboard scraping all my financial endpoints (wallets, exchange, API credits) to replace manual state up
