@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  firebase-emulators:
+    image: ghcr.io/firebase/firebase-emulators:latest
+    container_name: phoenix-firebase
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "8080:8080"   # Firestore
+      - "9000:9000"   # Realtime Database
+      - "5001:5001"   # Functions (reserved)
+    volumes:
+      - ./firebase.json:/firebase/firebase.json
+      - ./firestore.rules:/firebase/firestore.rules
+      - ./firestore.indexes.json:/firebase/firestore.indexes.json
+      - ./firebase_emulators_data:/firebase/data
+    environment:
+      - GCLOUD_PROJECT=phoenix-foundry-sandbox
+    command: "firebase emulators:start --only firestore,database --project phoenix-foundry-sandbox"
+
+  adapters-orchestrator:
+    build: ./adapters
+    container_name: phoenix-adapters
+    depends_on:
+      - firebase-emulators
+    volumes:
+      - ./adapters:/app
+      - ./sandbox_data:/app/sandbox_data
+      - ./credentials:/app/credentials:ro
+    environment:
+      - ENVIRONMENT=development
+      - FIRESTORE_EMULATOR_HOST=firebase-emulators:8080
+      - USE_SANDBOX_MODE=${USE_SANDBOX_MODE:-false}
+    env_file:
+      - .env
+    command: ["python", "orchestrator.py"]
+
+  dashboard:
+    build: ./dashboard
+    container_name: phoenix-dashboard
+    depends_on:
+      - firebase-emulators
+      - adapters-orchestrator
+    ports:
+      - "8050:8050"   # Plotly Dash
+      - "8000:8000"   # FastAPI
+    volumes:
+      - ./dashboard:/app
+      - ./credentials:/app/credentials:ro
+    environment:
+      - FIRESTORE_EMULATOR_HOST=firebase-emulators:8080
+      - DATABASE_EMULATOR_HOST=firebase-emulators:9000
+    env_file:
+      - .env
+    command: ["python", "main.py"]
+
+volumes:
+  firebase_emulators_data:
